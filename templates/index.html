@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        #result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        
+        #result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📦 Package Tracking System</h1>
+    
+    <div class="container">
+        <p>Enter a tracking number to see package status:</p>
+        
+        <input type="text" 
+               id="tracking" 
+               placeholder="Enter tracking number (e.g., ABC123)" 
+               onkeypress="if(event.key==='Enter') trackPackage()">
+        
+        <button onclick="trackPackage()">Track</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <div class="footer">
+        <p>Introduction to Engineering - Software Engineering Lab</p>
+    </div>
+    
+    <script>
+        function trackPackage() {
+            // Get the tracking number from the input field
+            const trackingNum = document.getElementById('tracking').value;
+            const resultDiv = document.getElementById('result');
+            
+            // Validate input
+            if (!trackingNum) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = '<strong>Error:</strong> Please enter a tracking number';
+                return;
+            }
+            
+            // Show loading message
+            resultDiv.className = '';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Searching...';
+            
+            // Make API call to backend
+            fetch('/api/track', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({tracking_number: trackingNum})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display results
+                if (data.status === 'Not found') {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <strong>Not Found</strong><br>
+                        Tracking number "${trackingNum}" not found in the system.
+                    `;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <strong>📍 Status:</strong> ${data.status}<br>
+                        <strong>🕐 Last Update:</strong> ${data.last_update}
+                    `;
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = '<strong>Error:</strong> Failed to connect to server';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
